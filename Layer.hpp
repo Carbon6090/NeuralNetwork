@@ -22,10 +22,13 @@ class Layer{
 	double GetRnd(double a, double b);
 public:	
 	Layer(int inputs, int outputs, const string &function);
+
 	vector<double> Forward(const vector<double> &x);
 	vector<double> Backward(const vector<double> &x, const vector<double> &dout);
 	void UpdateWeights(double learningRate);
+	
 	vector<double> GetOutput() const;
+	int GetSize() const;
 };
 
 void Layer::InitializeWeights(){	
@@ -115,4 +118,8 @@ void Layer::UpdateWeights(double learningRate) {
 
 vector<double> Layer::GetOutput() const {
 	return output;
+}
+
+int Layer::GetSize() const {
+	return outputs;
 }
