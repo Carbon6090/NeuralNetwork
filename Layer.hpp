@@ -10,14 +10,14 @@ class Layer{
 	string function;
 	vector<vector<double>> w;
 	vector<double> b;
-	vector<outputs> output;
-	vector<outputs> df;
+	vector<double> output;
+	vector<double> df;
 
 	void InitializeWeights();
 	double GetRnd(double a, double b);
 public:	
 	Layer(int inputs, int outputs, const string &function);
-	vector<double> Forward(const vector<double> &x);
+	void Forward(const vector<double> &x);
 };
 
 void Layer::InitializeWeights(){
@@ -32,7 +32,6 @@ void Layer::InitializeWeights(){
 	}
 }
 
-
 double Layer::GetRnd(double a, double b) {
 	return a + ((b - a) * rand()) / RAND_MAX;
 }
@@ -41,12 +40,13 @@ Layer::Layer(int inputs, int , const string &function) {
 	this->inputs = inputs;
 	this->outputs = outputs;
 	this->function = function;
-	
+	output = vector<double>(outputs, 0);
+	df = vector<double>(outputs, 0);
+
 	InitializeWeights();
 }
 
-vector<double> Layer::Forward(const vector<double> &x){
-	vector<double> z(outputs, 0);
+void Layer::Forward(const vector<double> &x){
 	
 	for (int i = 0; i < outputs; i++){
 		double y = b[i];
@@ -55,20 +55,20 @@ vector<double> Layer::Forward(const vector<double> &x){
 			y += w[i][j] * x[j];
 
 			if (function == "sigmoid"){
-				z[i] =  1.0 / (exp(-y) + 1);// sigmoid
-				df[i] =  z[i] * (1 - z[i])
+				output[i] =  1.0 / (exp(-y) + 1);// sigmoid
+				df[i] =  output[i] * (1 - z[i])
 			}
 
-			if (function == "tanh"){
-				 z[i] = tanh(y); // tanh
-				 df[i] = 1-z[i]*z[i];
+			else if (function == "tanh"){
+				 output[i] = tanh(y); // tanh
+				 df[i] = 1 - output[i] * output[i];
 			}
 
-			if (function == "relu"){
-				 z[i] = y > 0 ? y : 0; // relu z[i] = Activate(y);
-				 df = z[i] > 0 ? 1 : 0;
+			else if (function == "relu"){
+				 output[i] = y > 0 ? y : 0; // relu z[i] = Activate(y);
+				 df = output[i] > 0 ? 1 : 0;
 			}
 	}
 
-	return z;
+	return output;
 }
