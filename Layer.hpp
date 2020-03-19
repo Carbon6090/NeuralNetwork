@@ -28,7 +28,9 @@ public:
 	void UpdateWeights(double learningRate);
 	
 	vector<double> GetOutput() const;
+	vector<double> GetDx() const;
 	int GetSize() const;
+	void Print() const;
 };
 
 void Layer::InitializeWeights(){	
@@ -36,7 +38,7 @@ void Layer::InitializeWeights(){
 		for (int j = 0; j < inputs; j++)
 			w[i][j] = GetRnd(-0.5, 0.5);
 
-		b[i] = GetRnd(-0.5, 0.5); 
+		b[i] = 0;//GetRnd(-0.5, 0.5); 
 	}
 }
 
@@ -120,6 +122,21 @@ vector<double> Layer::GetOutput() const {
 	return output;
 }
 
+vector<double> Layer::GetDx() const {
+	return dx;
+}
+
 int Layer::GetSize() const {
 	return outputs;
+}
+
+void Layer::Print() const {
+	for (int i = 0; i < outputs; i++){
+		cout << "	" << function << "(" << b[i];
+
+		for (int j = 0; j < inputs; j++)
+			cout << " " << w[i][j];
+
+		cout << ")" << endl;
+	}
 }
