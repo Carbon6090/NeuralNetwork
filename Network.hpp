@@ -6,6 +6,11 @@
 
 using namespace std;
 
+struct Data{
+	vector<vector<double>> x;
+	vector<vector<double>> y;
+};
+
 class Network{
 	int inputs;
 	int last;
