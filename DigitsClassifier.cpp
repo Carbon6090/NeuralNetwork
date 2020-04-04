@@ -26,7 +26,7 @@ double Test(Network &network, const Data &data){
 
 int main(){
 	int n = 10;
-	double learningRate = 0.1;
+	double learningRate = 0.08;
 	int epochs = 500;
 	int testPeriod = 5;
 
@@ -43,6 +43,7 @@ int main(){
 			dataTest.x[i][j] /= 255.0;
 
 	Network network(784);
+	//network.AddLayer(100, "sigmod");
 	network.AddLayer(10, "sigmoid");
 
 	cout << "Init Accuracy" << Test(network, dataTest) << endl;

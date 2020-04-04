@@ -57,20 +57,19 @@ vector<string> DataReader::SplitLine(string line, char separator){
 }
 
 vector<double> DataReader::PixelsToVector(const vector<string> &values) const {
-	vector<double> res(784);
+	vector<double> res(width * height);
 
 	for (int i = 1; i < values.size(); i++)
-		res[i - 1] = stod(values[i]);
+		res[i - 1] = atof(values[i].c_str());
 
 	return res;
 }
 
 vector<double> DataReader::LabelToVector(const string &label) const {
-	vector<double> res(10, 0);
- 	double value = stod(label);
+	vector<double> res(labels.size(), 0);
 
-	for (int i = 0; i < 10; i++) {
-		if (i == value){
+	for (int i = 0; i < labels.size(); i++) {
+		if (labels[i] == label){
 			res[i] = 1;
 			return res;
 		}

@@ -29,9 +29,9 @@ int main(){
 		y.push_back({ (yi - STEP) / COEF });
 	}
 
-	Network network(784);
+	Network network(1);
 	network.AddLayer(2, "tanh");
-	network.AddLayer(10, "sigmoid");
+	network.AddLayer(1, "sigmoid");
 
 	network.Train(x, y, learningRate, epochs, 10000);	
 	network.Print();
