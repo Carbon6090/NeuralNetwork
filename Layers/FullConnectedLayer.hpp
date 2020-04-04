@@ -18,7 +18,7 @@ public:
 	FullConnectedLayer(int inputs, int output);
 
 	void Forward(const vector<double> &x);
-	void Backward(const vector<double> &x, const vector<double> &dout);
+	void Backward(const vector<double> &x, const vector<double> &dout, bool needDx);
 	void UpdateWeights(double learningRate);
 	
 	void Print() const;
@@ -54,13 +54,16 @@ void FullConnectedLayer::Forward(const vector<double> &x) {
 	}
 }
 
-void FullConnectedLayer::Backward(const vector<double> &x, const vector<double> &dout) {
+void FullConnectedLayer::Backward(const vector<double> &x, const vector<double> &dout, bool needDx) {
 	for (int i = 0; i < outputs; i++) {
 		for (int j = 0; j < inputs; j++)
 			dw[i][j] = dout[i] * x[j];
 
 		db[i] = dout[i];
 	}
+
+	if (!needDx)
+		return;
 
 	for (int i = 0; i < inputs; i++) {
 		double dx_i = 0;

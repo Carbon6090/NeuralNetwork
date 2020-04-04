@@ -18,7 +18,7 @@ public:
 	Layer(int inputs, int outputs);
 
 	virtual void Forward(const vector<double> &x) = 0;
-	virtual void Backward(const vector<double> &x, const vector<double> &dout) = 0;
+	virtual void Backward(const vector<double> &x, const vector<double> &dout, bool needDx) = 0;
 	virtual void UpdateWeights(double learningRate);
 	
 	vector<double> GetOutput() const;

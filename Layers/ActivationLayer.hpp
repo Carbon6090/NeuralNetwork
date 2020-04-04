@@ -12,7 +12,7 @@ public:
 	ActivationLayer(int size, const string &function);
 
 	void Forward(const vector<double> &x);
-	void Backward(const vector<double> &x, const vector<double> &dout);
+	void Backward(const vector<double> &x, const vector<double> &dout, bool needDx);
 
 	void Print() const;
 };
@@ -38,7 +38,10 @@ void ActivationLayer::Forward(const vector<double> &x) {
 	}
 }
 
-void ActivationLayer::Backward(const vector<double> &x, const vector<double> &dout) {
+void ActivationLayer::Backward(const vector<double> &x, const vector<double> &dout, bool needDx) {
+	if (!needDx)
+		return;
+	
 	for (int i = 0; i < outputs; i++)
 		dx[i] *= dout[i];
 }
