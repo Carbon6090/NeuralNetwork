@@ -1,8 +1,12 @@
 #pragma once
 #include <iostream>
 #include <vector>
+#include <string>
+#include <sstream>
 #include <cmath>
-#include "Layer.hpp"
+#include "Layers/Layer.hpp"
+#include "Layers/FullConnectedLayer.hpp"
+#include "Layers/ActivationLayer.hpp"
 
 using namespace std;
 
@@ -13,14 +17,15 @@ struct Data{
 
 class Network{
 	int inputs;
+	int outputs;
 	int last;
-	vector<Layer> layers;
+	vector<Layer*> layers;
 	void Backward(const vector<double> &x, const vector<double> &dout);
 	double CalculateLoss(const vector<double> &y, const vector<double> &t, vector<double> &dout);
 	void UpdateWeights(double learningRate);
 public:
 	Network(int inputs);
-	void AddLayer(int outputs, const string& function);
+	void AddLayer(const string& description);
 	vector<double> Forward(const vector<double> &x);
 	void Train(const vector<vector<double>> &x, const vector<vector<double>> &y, double learningRate, int epochs, int period);
 	void Print() const;
@@ -28,15 +33,15 @@ public:
 
 void Network::Backward(const vector<double> &x, const vector<double> &dout){
 	if (last == 0){
-		layers[last].Backward(x, dout);
+		layers[last]->Backward(x, dout);
 		return;
 	}
 
-	layers[last].Backward(layers[last - 1].GetOutput(), dout);
+	layers[last]->Backward(layers[last - 1]->GetOutput(), dout);
 	for (int i = last - 1; i >= 1; i--)
-		layers[i].Backward(layers[i - 1].GetOutput(), layers[i + 1].GetDx());
+		layers[i]->Backward(layers[i - 1]->GetOutput(), layers[i + 1]->GetDx());
 
-	layers[0].Backward(x, layers[1].GetDx());
+	layers[0]->Backward(x, layers[1]->GetDx());
 }
 
 double Network::CalculateLoss(const vector<double> &y, const vector<double> &t, vector<double> &dout){
@@ -53,27 +58,47 @@ double Network::CalculateLoss(const vector<double> &y, const vector<double> &t, 
 
 void Network::UpdateWeights(double learningRate){
 	for (int i = 0; i <= last; i++)
-		layers[i].UpdateWeights(learningRate);
+		layers[i]->UpdateWeights(learningRate);
 }
 
 Network::Network(int inputs){
 	this->inputs = inputs;
+	outputs = -1;
 	last = -1;
 }
 
-void Network::AddLayer(int outputs, const string& function){
-	int inputsSize = layers.size() ? layers[last].GetSize() : inputs;
-	layers.push_back(Layer(inputsSize, outputs, function));
+// fc size / activation function 
+void Network::AddLayer(const string& description){
+	int inputsSize = layers.size() ? this->outputs : inputs;
+	
+	stringstream ss(description);
+	string name;
+	ss >> name;
+	
+	if (name == "fc" || name == "fullconnected") {
+		int size;
+		ss >> size;
+		layers.push_back(new FullConnectedLayer(inputsSize, size));
+		this->outputs = size;
+	}
+	else if (name == "activation"){
+		string function;
+		ss >> function;
+		layers.push_back(new ActivationLayer(inputsSize, function));
+	}
+	else
+		throw runtime_error("Unknown layer: " + name);
+
 	last++;
 }
 
 vector<double> Network::Forward(const vector<double> &x){
-	layers[0].Forward(x);
+	layers[0]->Forward(x);
 
 	for (int i = 1; i < layers.size(); i++)
-		layers[i].Forward(layers[i - 1].GetOutput());
+		layers[i]->Forward(layers[i - 1]->GetOutput());
 
-	return layers[last].GetOutput();
+	return layers[last]->GetOutput();
 }
 
 void Network::Train(const vector<vector<double>> &x, const vector<vector<double>> &y, double learningRate, int epochs, int period){
@@ -97,6 +122,6 @@ void Network::Train(const vector<vector<double>> &x, const vector<vector<double>
 void Network::Print() const {
 	for (int i = 0; i < layers.size(); i++){
 		cout << "layer " << i << ": " << endl;
-		layers[i].Print();
+		layers[i]->Print();
 	}
 }

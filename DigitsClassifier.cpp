@@ -44,7 +44,8 @@ int main(){
 
 	Network network(784);
 	//network.AddLayer(100, "sigmod");
-	network.AddLayer(10, "sigmoid");
+	network.AddLayer("fc 10");
+	network.AddLayer("activation sigmoid");
 
 	cout << "Init Accuracy" << Test(network, dataTest) << endl;
 
