@@ -9,44 +9,47 @@ using namespace std;
 
 class FullConnectedLayer : public Layer{
 	vector<vector<double>> w;
-	vector<double> b;
-
 	vector<vector<double>> dw;
-	vector<double> db;
 
 	void InitializeWeights();
 public:	
 	FullConnectedLayer(int inputs, int output);
+	FullConnectedLayer(int inputs, int output, ifstream &f);
 
 	void Forward(const vector<double> &x);
 	void Backward(const vector<double> &x, const vector<double> &dout, bool needDx);
 	void UpdateWeights(double learningRate);
-	
+	void Save(ofstream &f);
+
 	void Summary() const;
 };
 
 void FullConnectedLayer::InitializeWeights(){	
-	for (int i = 0; i < outputs; i++){
-		for (int j = 0; j < inputs; j++)
+	for (int i = 0; i < outputs; i++)
+		for (int j = 0; j <= inputs; j++)
 			w[i][j] = GetRnd(-0.5, 0.5);
-
-		b[i] = 0;//GetRnd(-0.5, 0.5); 
-	}
 }
 
 FullConnectedLayer::FullConnectedLayer(int inputs, int outputs) : Layer(inputs, outputs){
-	w = vector<vector<double>>(outputs, vector<double>(inputs));
-	b = vector<double>(outputs);
-
-	dw = vector<vector<double>>(outputs, vector<double>(inputs));
-	db = vector<double>(outputs);
+	w = vector<vector<double>>(outputs, vector<double>(inputs + 1));
+	dw = vector<vector<double>>(outputs, vector<double>(inputs + 1));
 
 	InitializeWeights();
 }
 
+FullConnectedLayer::FullConnectedLayer(int inputs, int outputs, ifstream &f) : Layer(inputs, outputs){
+	w = vector<vector<double>>(outputs, vector<double>(inputs + 1));
+	dw = vector<vector<double>>(outputs, vector<double>(inputs + 1));
+
+	for (int i = 0; i < outputs; i++)
+		for (int j = 0; j <= inputs; j++)
+			f >> w[i][j];
+}
+
+
 void FullConnectedLayer::Forward(const vector<double> &x) {	
 	for (int i = 0; i < outputs; i++) {
-		double y = b[i];
+		double y = w[i][inputs];
 		
 		for (int j = 0; j < inputs; j++)
 			y += w[i][j] * x[j];
@@ -60,7 +63,7 @@ void FullConnectedLayer::Backward(const vector<double> &x, const vector<double> 
 		for (int j = 0; j < inputs; j++)
 			dw[i][j] = dout[i] * x[j];
 
-		db[i] = dout[i];
+		dw[i][inputs] = dout[i];
 	}
 
 	if (!needDx)
@@ -76,11 +79,19 @@ void FullConnectedLayer::Backward(const vector<double> &x, const vector<double> 
 }
 
 void FullConnectedLayer::UpdateWeights(double learningRate) {
-	for (int i = 0; i < outputs; i++){
-		for (int j = 0; j < inputs; j++)
+	for (int i = 0; i < outputs; i++)
+		for (int j = 0; j <= inputs; j++)
 			w[i][j] -= learningRate * dw[i][j];
+}
 
-		b[i] -= learningRate * db[i];
+void FullConnectedLayer::Save(ofstream &f){
+	f << "fc " << outputs << endl;
+
+	for (int i = 0; i < outputs; i++){
+		for (int j = 0; j <= inputs; j++)
+			f << w[i][j] << " ";
+
+		f << endl;
 	}
 }
 

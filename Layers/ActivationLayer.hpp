@@ -11,9 +11,11 @@ class ActivationLayer : public Layer{
 	string function; // "sigmoid" / "relu" / "tanh"
 public:	
 	ActivationLayer(int size, const string &function);
+	ActivationLayer(int size, ifstream &f);
 
 	void Forward(const vector<double> &x);
 	void Backward(const vector<double> &x, const vector<double> &dout, bool needDx);
+	void Save(ofstream &f);
 
 	void Summary() const;
 };
@@ -21,6 +23,11 @@ public:
 ActivationLayer::ActivationLayer(int size, const string &function) : Layer(size, size){
 	this->function = function;
 }
+
+ActivationLayer::ActivationLayer(int size, ifstream &f) : Layer(size, size){
+	f >> function;
+}
+
 
 void ActivationLayer::Forward(const vector<double> &x) {	
 	for (int i = 0; i < outputs; i++) {
@@ -45,6 +52,10 @@ void ActivationLayer::Backward(const vector<double> &x, const vector<double> &do
 	
 	for (int i = 0; i < outputs; i++)
 		dx[i] *= dout[i];
+}
+
+void ActivationLayer::Save(ofstream &f){
+	f << "activation " << " " << function << endl;
 }
 
 void ActivationLayer::Summary() const {

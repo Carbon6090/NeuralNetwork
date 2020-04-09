@@ -13,6 +13,7 @@ public:
 
 	void Forward(const vector<double> &x);
 	void Backward(const vector<double> &x, const vector<double> &dout, bool needDx);
+	void Save(ofstream &f);
 	
 	void Summary() const;
 };
@@ -40,6 +41,10 @@ void SoftmaxLayer::Backward(const vector<double> &x, const vector<double> &dout,
 	}
 }
 
+void SoftmaxLayer::Save(ofstream &f){
+	f << "softmax " << endl;
+}
+
 void SoftmaxLayer::Summary() const {
-	cout << "|" << setw(22) << "softmax layer|" << setw(15) << inputs << "|"<< setw(16) << outputs << "|" << setw(14) << "0" << "|" << endl;
+	cout << "|" << setw(22) << "softmax |" << setw(15) << inputs << "|"<< setw(16) << outputs << "|" << setw(14) << "0" << "|" << endl;
 }

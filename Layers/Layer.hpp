@@ -1,5 +1,6 @@
 #pragma once
 #include <iostream>
+#include <fstream>
 #include <vector>
 #include <cmath>
 
@@ -20,6 +21,8 @@ public:
 	virtual void Forward(const vector<double> &x) = 0;
 	virtual void Backward(const vector<double> &x, const vector<double> &dout, bool needDx) = 0;
 	virtual void UpdateWeights(double learningRate);
+	virtual void Save(ofstream &f) = 0;
+	//virtual void Load(ofstream &f) = 0;
 	
 	vector<double> GetOutput() const;
 	vector<double> GetDx() const;

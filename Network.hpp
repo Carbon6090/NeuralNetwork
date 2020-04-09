@@ -22,10 +22,12 @@ class Network{
 	void UpdateWeights(double learningRate);
 public:
 	Network(int inputs);
+	Network(const string &path);
 	void AddLayer(const string& description);
 	vector<double> Forward(const vector<double> &x);
 	void Train(const Data &data, double learningRate, int epochs, int period, LossFunction L);
 	void Summary() const;
+	void Save(const string &path);
 };
 
 void Network::Backward(const vector<double> &x, const vector<double> &dout){
@@ -50,6 +52,40 @@ Network::Network(int inputs){
 	this->inputs = inputs;
 	outputs = -1;
 	last = -1;
+}
+
+Network::Network(const string &path){
+	ifstream f(path);
+
+	if (!f)
+		throw runtime_error("invalid file");
+	
+	f >> inputs;
+	outputs = inputs;
+	
+	while (!f.eof()){
+		string name;	
+		f >> name;
+ 		
+		cout << name << endl;
+
+		int inputsSize = layers.size() ? outputs : inputs;
+
+		if (name == "activation"){
+			layers.push_back(new ActivationLayer(inputsSize, f));
+		}
+		else if (name == "fc" || name == "fullconnected"){
+			f >> outputs;
+			layers.push_back(new FullConnectedLayer(inputsSize, outputs, f));
+		}
+		else if (name == "softmax"){
+			layers.push_back(new SoftmaxLayer(inputsSize));
+		}
+		else if (name != "")
+			throw runtime_error("Unknown layer '" + name + "'");
+	}
+
+	last = layers.size() - 1;
 }
 
 // fc size / activation function 
@@ -102,6 +138,7 @@ void Network::Train(const Data &data, double learningRate, int epochs, int perio
 			UpdateWeights(learningRate);
 		}
 		
+		loss /= data.x.size();
 		if (epoch % period == 0)
 			cout << "Epoch: " << epoch << ", loss: " << loss << endl;
 	}
@@ -116,4 +153,14 @@ void Network::Summary() const {
 		layers[i]->Summary();
 
 	cout << "+---------------------+---------------+----------------+--------------+" << endl;
+}
+
+void Network::Save(const string &path){
+	ofstream f(path);
+	f << inputs << endl;
+
+	for (int i = 0; i < layers.size(); i++)
+		layers[i]->Save(f);
+
+	f.close();
 }

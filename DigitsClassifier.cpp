@@ -42,22 +42,31 @@ int main(){
 		for (int j = 0; j < dataTest.x[i].size(); j++)
 			dataTest.x[i][j] /= 255.0;
 
+	//Network network("mnist_0.977700.txt");
 	Network network(784);
-	//network.AddLayer(100, "sigmod");
 	network.AddLayer("fc 100");
 	network.AddLayer("activation sigmoid");
 	network.AddLayer("fc 10");
-	//network.AddLayer("activation sigmoid");
 	network.AddLayer("softmax");
 
 	network.Summary();
 
 	cout << "Init Accuracy" << Test(network, dataTest) << endl;
 
+	double maxAccuracy = 0;
+
 	for (int i = 0; i < epochs / testPeriod; i++){
 		network.Train(dataTrain, learningRate, testPeriod, 1, CrossEntropy);
 
-		cout << "Train accuracy" << Test(network, dataTrain) << endl;
-		cout << "Test accuracy" << Test(network, dataTest) << endl << endl;
+		double testAcc = Test(network, dataTest);
+		double trainAcc = Test(network, dataTrain);
+
+		cout << "Train accuracy" << trainAcc << endl;
+		cout << "Test accuracy" << testAcc << endl << endl;
+
+		if (testAcc > maxAccuracy){
+			network.Save("Models/mnist_" + to_string(testAcc) + ".txt");
+			maxAccuracy = testAcc;
+		}
 	}
 }
