@@ -23,7 +23,7 @@ public:
 	
 	vector<double> GetOutput() const;
 	vector<double> GetDx() const;
-	virtual void Print() const = 0;
+	virtual void Summary() const = 0;
 };
 
 double Layer::GetRnd(double a, double b) {

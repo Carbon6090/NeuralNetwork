@@ -1,5 +1,6 @@
 #pragma once
 #include <iostream>
+#include <iomanip>
 #include <vector>
 #include <cmath>
 #include "Layer.hpp"
@@ -14,7 +15,7 @@ public:
 	void Forward(const vector<double> &x);
 	void Backward(const vector<double> &x, const vector<double> &dout, bool needDx);
 
-	void Print() const;
+	void Summary() const;
 };
 
 ActivationLayer::ActivationLayer(int size, const string &function) : Layer(size, size){
@@ -46,6 +47,7 @@ void ActivationLayer::Backward(const vector<double> &x, const vector<double> &do
 		dx[i] *= dout[i];
 }
 
-void ActivationLayer::Print() const {
-	cout << "Activation function: " << function << endl;
+void ActivationLayer::Summary() const {
+	string name = "activation '" + function + "'";
+	cout << "|" << setw(21) << name << "|" << setw(15) << inputs << "|" << setw(16) << outputs << "|" << setw(14) << "0" << "|" << endl;
 }

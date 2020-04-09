@@ -1,5 +1,6 @@
 #pragma once
 #include <iostream>
+#include <iomanip>
 #include <vector>
 #include <cmath>
 #include "Layer.hpp"
@@ -21,7 +22,7 @@ public:
 	void Backward(const vector<double> &x, const vector<double> &dout, bool needDx);
 	void UpdateWeights(double learningRate);
 	
-	void Print() const;
+	void Summary() const;
 };
 
 void FullConnectedLayer::InitializeWeights(){	
@@ -83,6 +84,6 @@ void FullConnectedLayer::UpdateWeights(double learningRate) {
 	}
 }
 
-void FullConnectedLayer::Print() const {
-	cout << "Full connected layer" << endl;
+void FullConnectedLayer::Summary() const {
+	cout << "|" << setw(22) << "fc layer|" << setw(15) << inputs << "|" << setw(16) << outputs << "|" << setw(14) << (inputs + 1) * outputs<< "|" << endl;
 }

@@ -7,6 +7,8 @@
 #include "Layers/Layer.hpp"
 #include "Layers/FullConnectedLayer.hpp"
 #include "Layers/ActivationLayer.hpp"
+#include "Layers/SoftmaxLayer.hpp"
+#include "LossFunction.hpp"
 
 using namespace std;
 
@@ -21,14 +23,13 @@ class Network{
 	int last;
 	vector<Layer*> layers;
 	void Backward(const vector<double> &x, const vector<double> &dout);
-	double CalculateLoss(const vector<double> &y, const vector<double> &t, vector<double> &dout);
 	void UpdateWeights(double learningRate);
 public:
 	Network(int inputs);
 	void AddLayer(const string& description);
 	vector<double> Forward(const vector<double> &x);
-	void Train(const vector<vector<double>> &x, const vector<vector<double>> &y, double learningRate, int epochs, int period);
-	void Print() const;
+	void Train(const Data &data, double learningRate, int epochs, int period, LossFunction L);
+	void Summary() const;
 };
 
 void Network::Backward(const vector<double> &x, const vector<double> &dout){
@@ -42,18 +43,6 @@ void Network::Backward(const vector<double> &x, const vector<double> &dout){
 		layers[i]->Backward(layers[i - 1]->GetOutput(), layers[i + 1]->GetDx(), true);
 
 	layers[0]->Backward(x, layers[1]->GetDx(), false);
-}
-
-double Network::CalculateLoss(const vector<double> &y, const vector<double> &t, vector<double> &dout){
-	double loss = 0;
-
-	for (int i = 0; i < y.size(); i++){
-		double e = y[i] - t[i];
-		loss += e * e;
-		dout[i] = 2 * e;
-	}
-
-	return loss;
 }
 
 void Network::UpdateWeights(double learningRate){
@@ -86,6 +75,9 @@ void Network::AddLayer(const string& description){
 		ss >> function;
 		layers.push_back(new ActivationLayer(inputsSize, function));
 	}
+	else if (name == "softmax"){
+		layers.push_back(new SoftmaxLayer(inputsSize));
+	}
 	else
 		throw runtime_error("Unknown layer: " + name);
 
@@ -101,16 +93,16 @@ vector<double> Network::Forward(const vector<double> &x){
 	return layers[last]->GetOutput();
 }
 
-void Network::Train(const vector<vector<double>> &x, const vector<vector<double>> &y, double learningRate, int epochs, int period){
+void Network::Train(const Data &data, double learningRate, int epochs, int period, LossFunction L){
 	for (int epoch = 0; epoch < epochs; epoch++){
 		double loss = 0;
 		
-		for (int i = 0; i < x.size(); i++){
-			vector<double> out = Forward(x[i]);
-			vector<double> dout(y[i].size());
+		for (int i = 0; i < data.x.size(); i++){
+			vector<double> out = Forward(data.x[i]);
+			vector<double> dout(data.y[i].size());
 
-			loss += CalculateLoss(out, y[i], dout);
-			Backward(x[i], dout);
+			loss += L(out, data.y[i], dout);
+			Backward(data.x[i], dout);
 			UpdateWeights(learningRate);
 		}
 		
@@ -119,9 +111,13 @@ void Network::Train(const vector<vector<double>> &x, const vector<vector<double>
 	}
 }
 
-void Network::Print() const {
-	for (int i = 0; i < layers.size(); i++){
-		cout << "layer " << i << ": " << endl;
-		layers[i]->Print();
-	}
+void Network::Summary() const {
+	cout << "+---------------------+---------------+----------------+--------------+" << endl;
+	cout << "|     layer name      |  inputs count |  outputs count | weghts count |" << endl;
+	cout << "+---------------------+---------------+----------------+--------------+" << endl;
+
+	for (int i = 0; i < layers.size(); i++)
+		layers[i]->Summary();
+
+	cout << "+---------------------+---------------+----------------+--------------+" << endl;
 }

@@ -44,13 +44,18 @@ int main(){
 
 	Network network(784);
 	//network.AddLayer(100, "sigmod");
-	network.AddLayer("fc 10");
+	network.AddLayer("fc 100");
 	network.AddLayer("activation sigmoid");
+	network.AddLayer("fc 10");
+	//network.AddLayer("activation sigmoid");
+	network.AddLayer("softmax");
+
+	network.Summary();
 
 	cout << "Init Accuracy" << Test(network, dataTest) << endl;
 
 	for (int i = 0; i < epochs / testPeriod; i++){
-		network.Train(dataTrain.x, dataTrain.y, learningRate, testPeriod, 1);
+		network.Train(dataTrain, learningRate, testPeriod, 1, CrossEntropy);
 
 		cout << "Train accuracy" << Test(network, dataTrain) << endl;
 		cout << "Test accuracy" << Test(network, dataTest) << endl << endl;
