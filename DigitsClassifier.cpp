@@ -1,5 +1,5 @@
 #include <iostream>
-#include "DataReader.hpp"
+#include "Utils/DataReader.hpp"
 #include "Network.hpp"
 
 using namespace std;

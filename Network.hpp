@@ -4,18 +4,14 @@
 #include <string>
 #include <sstream>
 #include <cmath>
+#include "Utils/Data.hpp"
 #include "Layers/Layer.hpp"
 #include "Layers/FullConnectedLayer.hpp"
 #include "Layers/ActivationLayer.hpp"
 #include "Layers/SoftmaxLayer.hpp"
-#include "LossFunction.hpp"
+#include "Utils/LossFunction.hpp"
 
 using namespace std;
-
-struct Data{
-	vector<vector<double>> x;
-	vector<vector<double>> y;
-};
 
 class Network{
 	int inputs;
