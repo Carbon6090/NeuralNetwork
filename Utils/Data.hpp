@@ -1,10 +1,10 @@
 #pragma once
 #include <vector>
+#include "Tensor.hpp"
 
 using namespace std;
 
-
 struct Data{
-	vector<vector<double>> x;
-	vector<vector<double>> y;
+	vector<Tensor> x;
+	vector<Tensor> y;
 };

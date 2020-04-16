@@ -4,20 +4,11 @@
 
 using namespace std;
 
-int Argmax(const vector<double> &x){
-	int imax = 0;
-	
-	for (int i = 1; i < x.size(); i++)
-		if (x[i] > x[imax])
-			imax = i;
-
-	return imax;
-}
-
 double Test(Network &network, const Data &data){
 	int sum = 0;
+
 	for (int i = 0; i < data.y.size(); i++){
-		if (Argmax(data.y[i]) == Argmax(network.Forward(data.x[i])))
+		if (data.y[i].Argmax() == network.Forward(data.x[i]).Argmax())
 			sum++;
 	}
 
@@ -30,22 +21,23 @@ int main(){
 	int epochs = 500;
 	int testPeriod = 5;
 
-	DataReader data("dataset/mnist.txt");
-	Data dataTrain = data.ReadData("dataset/mnist_train.csv");
-	Data dataTest = data.ReadData("dataset/mnist_test.csv");
+	DataReader reader("dataset/mnist.txt");
+	Data dataTrain = reader.ReadData("dataset/mnist_train.csv");
+	Data dataTest = reader.ReadData("dataset/mnist_test.csv");
 
 	for (int i = 0; i < dataTrain.x.size(); i++)
-		for (int j = 0; j < dataTrain.x[i].size(); j++)
+		for (int j = 0; j < dataTrain.x[i].Total(); j++)
 			dataTrain.x[i][j] /= 255.0;
 
 	for (int i = 0; i < dataTest.x.size(); i++)
-		for (int j = 0; j < dataTest.x[i].size(); j++)
+		for (int j = 0; j < dataTest.x[i].Total(); j++)
 			dataTest.x[i][j] /= 255.0;
 
-	//Network network("mnist_0.977700.txt");
-	Network network(784);
-	network.AddLayer("fc 100");
+	//Network network("Models/mnist_0.979000.txt");
+	Network network(reader.GetSize());
+	network.AddLayer("fc 128");
 	network.AddLayer("activation sigmoid");
+	network.AddLayer("dropout 0.2");
 	network.AddLayer("fc 10");
 	network.AddLayer("softmax");
 

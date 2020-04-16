@@ -8,46 +8,45 @@ using namespace std;
 
 class Layer{
 protected:
-	int inputs;
-	int outputs;
-
-	vector<double> output;
-	vector<double> dx;
-
-	double GetRnd(double a, double b);
+	TensorSize outputSize;
+	TensorSize inputSize;
+	Tensor output;
+	Tensor dx;
 public:	
-	Layer(int inputs, int outputs);
+	Layer(TensorSize inputSize, TensorSize outputSize);
 
-	virtual void Forward(const vector<double> &x) = 0;
-	virtual void Backward(const vector<double> &x, const vector<double> &dout, bool needDx) = 0;
+	virtual void Forward(const Tensor &x) = 0;
+	virtual void ForwardTrain(const Tensor &x);
+	virtual void Backward(const Tensor &x, const Tensor &dout, bool needDx) = 0;
 	virtual void UpdateWeights(double learningRate);
 	virtual void Save(ofstream &f) = 0;
-	//virtual void Load(ofstream &f) = 0;
 	
-	vector<double> GetOutput() const;
-	vector<double> GetDx() const;
+	TensorSize GetOutputSize() const;
+	Tensor GetOutput() const;
+	Tensor GetDx() const;
 	virtual void Summary() const = 0;
 };
 
-double Layer::GetRnd(double a, double b) {
-	return a + ((b - a) * rand()) / RAND_MAX;
+Layer::Layer(TensorSize inputSize, TensorSize outputSize) : output(outputSize), dx(inputSize){
+	this->inputSize = inputSize;
+	this->outputSize = outputSize;
 }
 
-Layer::Layer(int inputs, int outputs) {
-	this->inputs = inputs;
-	this->outputs = outputs;
-
-	output = vector<double>(outputs, 0);
-	dx = vector<double>(inputs, 0);
+void Layer::ForwardTrain(const Tensor &x){
+	Forward(x);
 }
 
 void Layer::UpdateWeights(double learningRate) {
 }
 
-vector<double> Layer::GetOutput() const {
+TensorSize Layer::GetOutputSize() const{
+	return outputSize;
+}
+
+Tensor Layer::GetOutput() const {
 	return output;
 }
 
-vector<double> Layer::GetDx() const {
+Tensor Layer::GetDx() const {
 	return dx;
 }

@@ -8,35 +8,38 @@
 using namespace std;
 
 class SoftmaxLayer : public Layer{
+	int total;
 public:	
-	SoftmaxLayer(int size);
+	SoftmaxLayer(TensorSize size);
 
-	void Forward(const vector<double> &x);
-	void Backward(const vector<double> &x, const vector<double> &dout, bool needDx);
+	void Forward(const Tensor &x);
+	void Backward(const Tensor &x, const Tensor &dout, bool needDx);
 	void Save(ofstream &f);
 	
 	void Summary() const;
 };
 
-SoftmaxLayer::SoftmaxLayer(int size) : Layer(size, size){}
+SoftmaxLayer::SoftmaxLayer(TensorSize size) : Layer(size, size){
+	total = size.height * size.width * size.depth;
+}
 
-void SoftmaxLayer::Forward(const vector<double> &x) {	
+void SoftmaxLayer::Forward(const Tensor &x) {	
 	double sum = 0;
 
-	for (int i = 0; i < outputs; i++){
+	for (int i = 0; i < total; i++){
 		output[i] = exp(x[i]);
 		sum += output[i];
 	}
 
-	for (int i = 0; i < outputs; i++) 
+	for (int i = 0; i < total; i++) 
 		output[i] /= sum;
 }
 
-void SoftmaxLayer::Backward(const vector<double> &x, const vector<double> &dout, bool needDx) {
-	for (int i = 0; i < outputs; i++) {
+void SoftmaxLayer::Backward(const Tensor &x, const Tensor &dout, bool needDx) {
+	for (int i = 0; i < total; i++) {
 		dx[i] = 0;
 
-		for (int j = 0; j < outputs; j++)
+		for (int j = 0; j < total; j++)
 			dx[i] += dout[j] * output[i] * ((i == j) - output[j]);
 	}
 }
@@ -46,5 +49,5 @@ void SoftmaxLayer::Save(ofstream &f){
 }
 
 void SoftmaxLayer::Summary() const {
-	cout << "|" << setw(22) << "softmax |" << setw(15) << inputs << "|"<< setw(16) << outputs << "|" << setw(14) << "0" << "|" << endl;
+	cout << "|" << setw(22) << "softmax |" << setw(15) << inputSize << "|"<< setw(16) << outputSize << "|" << setw(14) << "0" << "|" << endl;
 }

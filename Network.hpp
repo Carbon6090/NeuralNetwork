@@ -4,33 +4,45 @@
 #include <string>
 #include <sstream>
 #include <cmath>
-#include "Utils/Data.hpp"
 #include "Layers/Layer.hpp"
 #include "Layers/FullConnectedLayer.hpp"
 #include "Layers/ActivationLayer.hpp"
 #include "Layers/SoftmaxLayer.hpp"
+#include "Layers/DropoutLayer.hpp"
+#include "Utils/Data.hpp"
 #include "Utils/LossFunction.hpp"
+#include "Utils/Tensor.hpp"
 
 using namespace std;
 
 class Network{
-	int inputs;
-	int outputs;
+	TensorSize inputSize;
+	TensorSize outputSize;
 	int last;
 	vector<Layer*> layers;
-	void Backward(const vector<double> &x, const vector<double> &dout);
+	Tensor ForwardTrain(const Tensor &x);
+	void Backward(const Tensor &x, const Tensor &dout);
 	void UpdateWeights(double learningRate);
 public:
-	Network(int inputs);
+	Network(TensorSize inputSize);
 	Network(const string &path);
 	void AddLayer(const string& description);
-	vector<double> Forward(const vector<double> &x);
+	Tensor Forward(const Tensor &x);
 	void Train(const Data &data, double learningRate, int epochs, int period, LossFunction L);
 	void Summary() const;
 	void Save(const string &path);
 };
 
-void Network::Backward(const vector<double> &x, const vector<double> &dout){
+Tensor Network::ForwardTrain(const Tensor &x){
+	layers[0]->ForwardTrain(x);
+
+	for (int i = 1; i < layers.size(); i++)
+		layers[i]->ForwardTrain(layers[i - 1]->GetOutput());
+
+	return layers[last]->GetOutput();
+}
+
+void Network::Backward(const Tensor &x, const Tensor &dout){
 	if (last == 0){
 		layers[last]->Backward(x, dout, false);
 		return;
@@ -48,9 +60,9 @@ void Network::UpdateWeights(double learningRate){
 		layers[i]->UpdateWeights(learningRate);
 }
 
-Network::Network(int inputs){
-	this->inputs = inputs;
-	outputs = -1;
+Network::Network(TensorSize inputSize){
+	this->inputSize = inputSize;
+	outputSize = inputSize;
 	last = -1;
 }
 
@@ -60,8 +72,10 @@ Network::Network(const string &path){
 	if (!f)
 		throw runtime_error("invalid file");
 	
-	f >> inputs;
-	outputs = inputs;
+	f >> inputSize.height >> inputSize.width >> inputSize.depth;
+	outputSize = inputSize;
+
+	last = -1;
 	
 	while (!f.eof()){
 		string name;	
@@ -69,28 +83,36 @@ Network::Network(const string &path){
  		
 		cout << name << endl;
 
-		int inputsSize = layers.size() ? outputs : inputs;
+		TensorSize inputs = outputSize;
 
 		if (name == "activation"){
-			layers.push_back(new ActivationLayer(inputsSize, f));
+			layers.push_back(new ActivationLayer(inputs, f));
 		}
 		else if (name == "fc" || name == "fullconnected"){
+			int outputs;
 			f >> outputs;
-			layers.push_back(new FullConnectedLayer(inputsSize, outputs, f));
+
+			layers.push_back(new FullConnectedLayer(inputs, outputs, f));
 		}
 		else if (name == "softmax"){
-			layers.push_back(new SoftmaxLayer(inputsSize));
+			break;
+			layers.push_back(new SoftmaxLayer(inputs));
+		}
+		else if (name == "dropout"){
+			double p;
+			f >> p;
+			layers.push_back(new DropoutLayer(inputs, p));
 		}
 		else if (name != "")
 			throw runtime_error("Unknown layer '" + name + "'");
-	}
 
-	last = layers.size() - 1;
+		outputSize = layers[++last]->GetOutputSize();
+	}
 }
 
 // fc size / activation function 
 void Network::AddLayer(const string& description){
-	int inputsSize = layers.size() ? this->outputs : inputs;
+	TensorSize inputs = outputSize;
 	
 	stringstream ss(description);
 	string name;
@@ -99,24 +121,28 @@ void Network::AddLayer(const string& description){
 	if (name == "fc" || name == "fullconnected") {
 		int size;
 		ss >> size;
-		layers.push_back(new FullConnectedLayer(inputsSize, size));
-		this->outputs = size;
+		layers.push_back(new FullConnectedLayer(inputs, size));
 	}
 	else if (name == "activation"){
 		string function;
 		ss >> function;
-		layers.push_back(new ActivationLayer(inputsSize, function));
+		layers.push_back(new ActivationLayer(inputs, function));
 	}
 	else if (name == "softmax"){
-		layers.push_back(new SoftmaxLayer(inputsSize));
+		layers.push_back(new SoftmaxLayer(inputs));
+	}
+	else if (name == "dropout"){
+		double p;
+		ss >> p;
+		layers.push_back(new DropoutLayer(inputs, p));
 	}
 	else
 		throw runtime_error("Unknown layer: " + name);
 
-	last++;
+	outputSize = layers[++last]->GetOutputSize();
 }
 
-vector<double> Network::Forward(const vector<double> &x){
+Tensor Network::Forward(const Tensor &x){
 	layers[0]->Forward(x);
 
 	for (int i = 1; i < layers.size(); i++)
@@ -130,8 +156,8 @@ void Network::Train(const Data &data, double learningRate, int epochs, int perio
 		double loss = 0;
 		
 		for (int i = 0; i < data.x.size(); i++){
-			vector<double> out = Forward(data.x[i]);
-			vector<double> dout(data.y[i].size());
+			Tensor out = ForwardTrain(data.x[i]);
+			Tensor dout(outputSize);
 
 			loss += L(out, data.y[i], dout);
 			Backward(data.x[i], dout);
@@ -157,7 +183,7 @@ void Network::Summary() const {
 
 void Network::Save(const string &path){
 	ofstream f(path);
-	f << inputs << endl;
+	f << inputSize.height << " " << inputSize.width << " " << inputSize.depth << endl;
 
 	for (int i = 0; i < layers.size(); i++)
 		layers[i]->Save(f);

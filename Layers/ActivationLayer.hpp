@@ -9,28 +9,31 @@ using namespace std;
 
 class ActivationLayer : public Layer{
 	string function; // "sigmoid" / "relu" / "tanh"
+	int total;
 public:	
-	ActivationLayer(int size, const string &function);
-	ActivationLayer(int size, ifstream &f);
+	ActivationLayer(TensorSize size, const string &function);
+	ActivationLayer(TensorSize size, ifstream &f);
 
-	void Forward(const vector<double> &x);
-	void Backward(const vector<double> &x, const vector<double> &dout, bool needDx);
+	void Forward(const Tensor &x);
+	void Backward(const Tensor &x, const Tensor &dout, bool needDx);
 	void Save(ofstream &f);
 
 	void Summary() const;
 };
 
-ActivationLayer::ActivationLayer(int size, const string &function) : Layer(size, size){
+ActivationLayer::ActivationLayer(TensorSize size, const string &function) : Layer(size, size){
 	this->function = function;
+	total = size.height * size.width * size.depth;
 }
 
-ActivationLayer::ActivationLayer(int size, ifstream &f) : Layer(size, size){
+ActivationLayer::ActivationLayer(TensorSize size, ifstream &f) : Layer(size, size){
 	f >> function;
+	total = size.height * size.width * size.depth;
 }
 
 
-void ActivationLayer::Forward(const vector<double> &x) {	
-	for (int i = 0; i < outputs; i++) {
+void ActivationLayer::Forward(const Tensor &x) {	
+	for (int i = 0; i < total; i++) {
 		if (function == "sigmoid") {
 			output[i] = 1.0 / (exp(-x[i]) + 1); // sigmoid
 			dx[i] = output[i] * (1 - output[i]);
@@ -46,11 +49,11 @@ void ActivationLayer::Forward(const vector<double> &x) {
 	}
 }
 
-void ActivationLayer::Backward(const vector<double> &x, const vector<double> &dout, bool needDx) {
+void ActivationLayer::Backward(const Tensor &x, const Tensor &dout, bool needDx) {
 	if (!needDx)
 		return;
 	
-	for (int i = 0; i < outputs; i++)
+	for (int i = 0; i < total; i++)
 		dx[i] *= dout[i];
 }
 
@@ -60,5 +63,5 @@ void ActivationLayer::Save(ofstream &f){
 
 void ActivationLayer::Summary() const {
 	string name = "activation '" + function + "'";
-	cout << "|" << setw(21) << name << "|" << setw(15) << inputs << "|" << setw(16) << outputs << "|" << setw(14) << "0" << "|" << endl;
+	cout << "|" << setw(21) << name << "|" << setw(15) << inputSize << "|" << setw(16) << outputSize << "|" << setw(14) << "0" << "|" << endl;
 }

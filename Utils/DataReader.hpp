@@ -4,18 +4,19 @@
 #include <string>
 #include <fstream>
 #include "Data.hpp"
+#include "Tensor.hpp"
 
 using namespace std;
 
 class DataReader{
-	int width;
-	int height;
+	TensorSize size;
 	vector<string> labels;
+	vector<string> SplitLine(string line, char separator);
 public:
 	DataReader(const string &path);
-	vector<string> SplitLine(string line, char separator);
-	vector<double> PixelsToVector(const vector<string> &values) const;
-	vector<double> LabelToVector(const string &label) const;
+	TensorSize GetSize() const;
+	Tensor PixelsToVector(const vector<string> &values) const;
+	Tensor LabelToVector(const string &label) const;
 	Data ReadData(const string &path);
 };
 
@@ -30,11 +31,16 @@ DataReader::DataReader(const string &path){
 	getline(f, line);
 	vector<string> s = SplitLine(line, ' ');
 	
-	width = stoi(s[0]);
-	height = stoi(s[1]);
+	size.width = stoi(s[0]);
+	size.height = stoi(s[1]);
+	size.depth = stoi(s[2]);
 
 	getline(f, line);
 	labels = SplitLine(line, ' ');
+}
+
+TensorSize DataReader::GetSize() const{
+	return size;
 }
 
 vector<string> DataReader::SplitLine(string line, char separator){
@@ -56,17 +62,19 @@ vector<string> DataReader::SplitLine(string line, char separator){
 	return s;
 }
 
-vector<double> DataReader::PixelsToVector(const vector<string> &values) const {
-	vector<double> res(width * height);
-
-	for (int i = 1; i < values.size(); i++)
-		res[i - 1] = atof(values[i].c_str());
+Tensor DataReader::PixelsToVector(const vector<string> &values) const {
+	Tensor res(size);
+	int index = 1;
+	for (int i = 0; i < size.height; i++)
+		for (int j = 0; j < size.width; j++)
+			for (int k = 0; k < size.depth; k++)
+				res(i, j, k) = atof(values[index++].c_str());
 
 	return res;
 }
 
-vector<double> DataReader::LabelToVector(const string &label) const {
-	vector<double> res(labels.size(), 0);
+Tensor DataReader::LabelToVector(const string &label) const {
+	Tensor res(labels.size());
 
 	for (int i = 0; i < labels.size(); i++) {
 		if (labels[i] == label){
@@ -88,7 +96,7 @@ Data DataReader::ReadData(const string &path) {
 	while(getline(f, line)){
 		vector<string> s = SplitLine(line, ',');
 
-		if (s.size() - 1 != width * height)
+		if (s.size() - 1 != size.width * size.height * size.depth)
 			throw runtime_error("invalid pixels' size");
 
 		data.x.push_back(PixelsToVector(s));

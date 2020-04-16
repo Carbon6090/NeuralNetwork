@@ -1,12 +1,12 @@
 #pragma once
 #include <iostream>
 
-typedef double (*LossFunction)(const vector<double> &y, const vector<double> &t, vector<double> &dout);
+typedef double (*LossFunction)(const Tensor &y, const Tensor &t, Tensor &dout);
 
-double MSE(const vector<double> &y, const vector<double> &t, vector<double> &dout){
+double MSE(const Tensor &y, const Tensor &t, Tensor &dout){
 	double loss = 0;
 
-	for (int i = 0; i < y.size(); i++){
+	for (int i = 0; i < y.Total(); i++){
 		double e = y[i] - t[i];
 		loss += e * e;
 		dout[i] = 2 * e;
@@ -15,10 +15,10 @@ double MSE(const vector<double> &y, const vector<double> &t, vector<double> &dou
 	return loss;
 }
 
-double CrossEntropy(const vector<double> &y, const vector<double> &t, vector<double> &dout){
+double CrossEntropy(const Tensor &y, const Tensor &t, Tensor &dout){
 	double loss = 0;
 
-	for (int i = 0; i < y.size(); i++){
+	for (int i = 0; i < y.Total(); i++){
 		dout[i] = -t[i] / y[i];
 		loss -= t[i] * log(y[i]);
 	}
@@ -26,10 +26,10 @@ double CrossEntropy(const vector<double> &y, const vector<double> &t, vector<dou
 	return loss;
 }
 
-double BinaryCrossEntropy(const vector<double> &y, const vector<double> &t, vector<double> &dout){
+double BinaryCrossEntropy(const Tensor &y, const Tensor &t, Tensor &dout){
 	double loss = 0;
 
-	for (int i = 0; i < y.size(); i++){
+	for (int i = 0; i < y.Total(); i++){
 		dout[i] = -(y[i] - t[i]) / (y[i] - y[i] * y[i]);
 		loss -= t[i]*log(y[i]) + (1 - t[i])*log(1-y[i]);
 	}
