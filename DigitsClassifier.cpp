@@ -33,13 +33,17 @@ int main(){
 		for (int j = 0; j < dataTest.x[i].Total(); j++)
 			dataTest.x[i][j] /= 255.0;
 
-	//Network network("Models/mnist_0.979000.txt");
-	Network network(reader.GetSize());
+	dataTrain.x[0].SaveAsImage("0.bmp");
+	dataTrain.x[1].SaveAsImage("1.bmp");
+	dataTrain.x[2].SaveAsImage("2.bmp");
+
+	Network network("Models/mnist_0.979000.txt");
+	/*Network network(reader.GetSize());
 	network.AddLayer("fc 128");
 	network.AddLayer("activation sigmoid");
 	network.AddLayer("dropout 0.2");
 	network.AddLayer("fc 10");
-	network.AddLayer("softmax");
+	network.AddLayer("softmax");*/
 
 	network.Summary();
 

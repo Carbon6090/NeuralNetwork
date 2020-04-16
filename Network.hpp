@@ -83,6 +83,9 @@ Network::Network(const string &path){
  		
 		cout << name << endl;
 
+		if(name == "")
+			continue;
+
 		TensorSize inputs = outputSize;
 
 		if (name == "activation"){
@@ -95,7 +98,6 @@ Network::Network(const string &path){
 			layers.push_back(new FullConnectedLayer(inputs, outputs, f));
 		}
 		else if (name == "softmax"){
-			break;
 			layers.push_back(new SoftmaxLayer(inputs));
 		}
 		else if (name == "dropout"){
@@ -103,7 +105,7 @@ Network::Network(const string &path){
 			f >> p;
 			layers.push_back(new DropoutLayer(inputs, p));
 		}
-		else if (name != "")
+		else
 			throw runtime_error("Unknown layer '" + name + "'");
 
 		outputSize = layers[++last]->GetOutputSize();
