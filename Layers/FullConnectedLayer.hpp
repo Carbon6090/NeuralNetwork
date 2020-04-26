@@ -21,12 +21,14 @@ class FullConnectedLayer : public Layer{
 	void InitializeWeights();
 public:	
 	FullConnectedLayer(TensorSize inputs, int size);
-	FullConnectedLayer(TensorSize inputs, int size, ifstream &f);
 
 	void Forward(const Tensor &x);
 	void Backward(const Tensor &x, const Tensor &dout, bool needDx);
+
 	void UpdateWeights(double learningRate);
+
 	void Save(ofstream &f);
+	void Load(ifstream &f);
 
 	void Summary() const;
 };
@@ -46,19 +48,6 @@ FullConnectedLayer::FullConnectedLayer(TensorSize inputSize, int size) : Layer(i
 
 	InitializeWeights();
 }
-
-FullConnectedLayer::FullConnectedLayer(TensorSize inputSize, int size, ifstream &f) : Layer(inputSize, { 1, 1, size }), distribution(0.0, sqrt(2.0 / (inputSize.height * inputSize.width * inputSize.depth))) {
-	inputs = inputSize.height * inputSize.width * inputSize.depth;
-	outputs = size;
-
-	w = vector<vector<double>>(outputs, vector<double>(inputs + 1));
-	dw = vector<vector<double>>(outputs, vector<double>(inputs + 1));
-
-	for (int i = 0; i < outputs; i++)
-		for (int j = 0; j <= inputs; j++)
-			f >> w[i][j];
-}
-
 
 void FullConnectedLayer::Forward(const Tensor &x) {	
 	for (int i = 0; i < outputs; i++) {
@@ -107,6 +96,13 @@ void FullConnectedLayer::Save(ofstream &f){
 		f << endl;
 	}
 }
+
+void FullConnectedLayer::Load(ifstream &f){
+	for (int i = 0; i < outputs; i++)
+		for (int j = 0; j <= inputs; j++)
+			f >> w[i][j];
+}
+
 
 void FullConnectedLayer::Summary() const {
 	cout << "|" << setw(22) << "fc layer|" << setw(15) << inputSize << "|" << setw(16) << outputSize << "|" << setw(14) << (inputs + 1) * outputs<< "|" << endl;

@@ -1,64 +1,127 @@
 #pragma once
-
 #include <vector>
 #include <fstream>
-#include <string>
+
+struct Pixel {
+    unsigned char b, g, r;
+};
 
 class Image {
-	// структура для пикселя
-	struct Pixel {
-		unsigned char r;
-		unsigned char g;
-		unsigned char b;
-	};
+    int width;
+    int height;
+    std::vector<Pixel> pixels; // пиксели
 
-	int width; // ширина картинки
-	int height; // высота картинки
-	std::vector<Pixel> data; // вектор пикселей
-
+    void Read(const std::string& filename);
+    int Clamp(double v) const;
 public:
-	Image(int width, int height);
+    Image(int width, int height);
+    Image(const std::string& filename);
 
-	void SetPixel(int x, int y, unsigned char r, unsigned char g, unsigned char b); // изменение пикселя
-	void Save(const std::string& name); // сохранение
+    int Width() const;
+    int Height() const;
+
+    Pixel GetPixel(int x, int y);
+    void SetPixel(int x, int y, int r, int g, int b);
+
+    void Save(const std::string &filename);
 };
 
 Image::Image(int width, int height) {
-	this->width = width;
-	this->height = height;
-	data.resize(width * height);
+    this->width = width;
+    this->height = height;
+    this->pixels.resize(width * height);
 }
 
-// изменение пикселя
-void Image::SetPixel(int x, int y, unsigned char r, unsigned char g, unsigned char b) {
-	data[(height - 1 - y) * width + x] = { b, g, r };
+Image::Image(const std::string& filename) {
+    Read(filename);
 }
 
-// сохранение
-void Image::Save(const std::string& name) {
-	int paddedsize = (width*height) * sizeof(Pixel);
+int Image::Width() const {
+    return width;
+}
 
-	unsigned char bmpfileheader[14] = {'B','M', 0,0,0,0, 0,0, 0,0, 54,0,0,0};
-	unsigned char bmpinfoheader[40] = {40,0,0,0, 0,0,0,0, 0,0,0,0, 1,0, 24,0};
+int Image::Height() const {
+    return height;
+}
 
-	bmpfileheader[ 2] = (unsigned char)(paddedsize    );
-	bmpfileheader[ 3] = (unsigned char)(paddedsize>> 8);
-	bmpfileheader[ 4] = (unsigned char)(paddedsize>>16);
-	bmpfileheader[ 5] = (unsigned char)(paddedsize>>24);
+Pixel Image::GetPixel(int x, int y) {
+    return pixels[(height - 1 - y) * width + x];
+}
 
-	bmpinfoheader[ 4] = (unsigned char)(width    );
-	bmpinfoheader[ 5] = (unsigned char)(width>> 8);
-	bmpinfoheader[ 6] = (unsigned char)(width>>16);
-	bmpinfoheader[ 7] = (unsigned char)(width>>24);
-	bmpinfoheader[ 8] = (unsigned char)(height    );
-	bmpinfoheader[ 9] = (unsigned char)(height>> 8);
-	bmpinfoheader[10] = (unsigned char)(height>>16);
-	bmpinfoheader[11] = (unsigned char)(height>>24);
+void Image::SetPixel(int x, int y, int r, int g, int b) {
+    Pixel &p = pixels[(height - 1 - y) * width + x];
+    
+    p.r = Clamp(r);
+    p.g = Clamp(g);
+    p.b = Clamp(b);
+}
 
-	std::ofstream out(name.c_str(), std::ios::out | std::ios::binary);
-	out.write((const char*)bmpfileheader, 14);
-	out.write((const char*)bmpinfoheader, 40);
-	out.write((const char*)data.data(), paddedsize);
-	out.flush();
-	out.close();
+int Image::Clamp(double v) const {
+    if (v < 0)
+        return 0;
+
+    if (v > 255)
+        return 255;
+
+    return v;
+}
+
+void Image::Read(const std::string& filename) {
+    std::ifstream f(filename, std::ios::in | std::ios::binary);
+
+    if (!f)
+        throw std::runtime_error("unable to open bmp file");
+    
+    unsigned char bmpfileheader[14];
+    unsigned char bmpinfoheader[40];
+
+    f.read((char *) bmpfileheader, 14);
+    f.read((char *) bmpinfoheader, 40);
+
+    unsigned char w0 = bmpinfoheader[4];
+    unsigned char w1 = bmpinfoheader[5];
+    unsigned char w2 = bmpinfoheader[6];
+    unsigned char w3 = bmpinfoheader[7];
+
+    unsigned char h0 = bmpinfoheader[8];
+    unsigned char h1 = bmpinfoheader[9];
+    unsigned char h2 = bmpinfoheader[10];
+    unsigned char h3 = bmpinfoheader[11];
+
+    width = (w3 << 24) | (w2 << 16) | (w1 << 8) | w0;
+    height = (h3 << 24) | (h2 << 16) | (h1 << 8) | h0;
+    
+    int paddedsize = (width*height) * sizeof(Pixel);
+
+    pixels.resize(width * height);
+    f.read((char*)pixels.data(), paddedsize);
+    f.close();
+}
+
+void Image::Save(const std::string &filename) {
+    int paddedsize = (width*height) * sizeof(Pixel);
+
+    unsigned char bmpfileheader[14] = {'B','M', 0,0,0,0, 0,0, 0,0, 54,0,0,0};
+    unsigned char bmpinfoheader[40] = {40,0,0,0, 0,0,0,0, 0,0,0,0, 1,0, 24,0};
+
+    bmpfileheader[ 2] = (unsigned char)(paddedsize    );
+    bmpfileheader[ 3] = (unsigned char)(paddedsize>> 8);
+    bmpfileheader[ 4] = (unsigned char)(paddedsize>>16);
+    bmpfileheader[ 5] = (unsigned char)(paddedsize>>24);
+
+    bmpinfoheader[ 4] = (unsigned char)(width    );
+    bmpinfoheader[ 5] = (unsigned char)(width>> 8);
+    bmpinfoheader[ 6] = (unsigned char)(width>>16);
+    bmpinfoheader[ 7] = (unsigned char)(width>>24);
+    bmpinfoheader[ 8] = (unsigned char)(height    );
+    bmpinfoheader[ 9] = (unsigned char)(height>> 8);
+    bmpinfoheader[10] = (unsigned char)(height>>16);
+    bmpinfoheader[11] = (unsigned char)(height>>24);
+
+    std::ofstream out(filename.c_str(), std::ios::out | std::ios::binary);
+    out.write((const char*)bmpfileheader, 14);
+    out.write((const char*)bmpinfoheader, 40);
+    out.write((const char*)pixels.data(), paddedsize);
+    out.flush();
+    out.close();
 }

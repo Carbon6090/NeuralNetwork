@@ -17,9 +17,9 @@ double Test(Network &network, const Data &data){
 
 int main(){
 	int n = 10;
-	double learningRate = 0.08;
+	double learningRate = 0.02;
 	int epochs = 500;
-	int testPeriod = 5;
+	int testPeriod = 1;
 
 	DataReader reader("dataset/mnist.txt");
 	Data dataTrain = reader.ReadData("dataset/mnist_train.csv");
@@ -33,17 +33,24 @@ int main(){
 		for (int j = 0; j < dataTest.x[i].Total(); j++)
 			dataTest.x[i][j] /= 255.0;
 
-	dataTrain.x[0].SaveAsImage("0.bmp");
-	dataTrain.x[1].SaveAsImage("1.bmp");
-	dataTrain.x[2].SaveAsImage("2.bmp");
+	//Network network("Models/mnist_0.987100.txt");
+	Network network(reader.GetSize());
+	network.AddLayer("convolution 8 3 0");
+	network.AddLayer("activation relu");
+	network.AddLayer("maxpooling 2");
+	network.AddLayer("dropout 0.4");
 
-	Network network("Models/mnist_0.979000.txt");
-	/*Network network(reader.GetSize());
+	network.AddLayer("convolution 16 3 0");
+	network.AddLayer("activation relu");
+	network.AddLayer("maxpooling 2");
+	network.AddLayer("dropout 0.4");
+
 	network.AddLayer("fc 128");
-	network.AddLayer("activation sigmoid");
+	network.AddLayer("activation relu");
 	network.AddLayer("dropout 0.2");
 	network.AddLayer("fc 10");
-	network.AddLayer("softmax");*/
+
+	network.AddLayer("softmax");
 
 	network.Summary();
 
@@ -66,3 +73,11 @@ int main(){
 		}
 	}
 }
+
+
+/*
+	conv k 3x3 - relu - conv k 3x3 - relu - pool2 - dropout 0.4 - conv 2k 3x3 - relu - conv 2k 3x3 - relu - pool - dropout 0.4 - fc n - dropout 0.2 - fc 10 - softmax
+	conv k 3x3 - relu - pool2 - dropout 0.4 - conv 2k 3x3 - relu - pool - dropout 0.4 - fc n - dropout 0.2 - fc 10 - softmax
+
+	conv 16 3x3 - relu - conv 16 3x3 - relu - pool 2 dropout 0.4 - conv 32 3x3 - relu - conv 32 3x3 - relu - pool 2 dropout 0.4 - fc 128 - dropout 0.2 - fc 10 - softmax
+*/

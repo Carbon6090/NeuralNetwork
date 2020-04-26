@@ -20,6 +20,7 @@ public:
 	virtual void Backward(const Tensor &x, const Tensor &dout, bool needDx) = 0;
 	virtual void UpdateWeights(double learningRate);
 	virtual void Save(ofstream &f) = 0;
+	virtual void Load(ifstream &f);
 	
 	TensorSize GetOutputSize() const;
 	Tensor GetOutput() const;
@@ -37,6 +38,9 @@ void Layer::ForwardTrain(const Tensor &x){
 }
 
 void Layer::UpdateWeights(double learningRate) {
+}
+
+void Layer::Load(ifstream &f) {
 }
 
 TensorSize Layer::GetOutputSize() const{
